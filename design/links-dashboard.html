@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinkPulse — Links Dashboard (prototype)</title>
+<!--
+  OpenDesign-style prototype of the /links dashboard view.
+  Renders from DESIGN.md tokens; same artifact the shipped
+  public/index.html implements. Static data shown.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 14px/1.5 "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0d1117; color: #e6edf3; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px; display: grid; gap: 16px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; }
+  h1 { font-size: 24px; font-weight: 600; }
+  h1 span { color: #58a6ff; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .kpi { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+  .kpi b { display: block; font-size: 28px; }
+  .kpi small { color: #8b949e; font-size: 12px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; display: grid; gap: 12px; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; padding: 10px 12px; font-size: 14px; }
+  input:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,.25); }
+  button { background: #58a6ff; color: #0d1117; border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+  button:hover { background: #79b8ff; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; color: #8b949e; padding: 8px 12px; border-bottom: 1px solid #30363d; }
+  td { padding: 10px 12px; border-bottom: 1px solid #21262d; }
+  tbody tr:hover { background: #1c2129; }
+  .badge { background: #0d1117; border: 1px solid #30363d; border-radius: 999px; padding: 2px 10px; font-size: 12px; color: #8b949e; }
+  a { color: #58a6ff; text-decoration: none; }
+  .url-cell { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8b949e; }
+  .spark { display: flex; align-items: flex-end; gap: 3px; height: 28px; }
+  .spark i { width: 7px; background: #58a6ff; border-radius: 2px 2px 0 0; }
+  .spark i.zero { background: #21262d; }
+  .muted { color: #8b949e; font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Link<span>Pulse</span></h1>
+    <span class="muted">Links dashboard · prototype</span>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi"><b>1,284</b><small>total clicks</small></div>
+    <div class="kpi"><b>312</b><small>today</small></div>
+    <div class="kpi"><b>6.2%</b><small>7-day growth</small></div>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <input placeholder="https://example.com/very/long/url">
+      <button>Shorten</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <table>
+      <thead><tr><th>Short</th><th>Destination</th><th>Clicks · 7 days</th><th>Created</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#">/aX9kP2</a></td><td class="url-cell">https://example.com/launch-blog-post</td>
+          <td><span class="badge">482</span> <span class="spark"><i style="height:60%"></i><i style="height:80%"></i><i style="height:40%"></i><i class="zero" style="height:8%"></i><i style="height:100%"></i><i style="height:70%"></i><i style="height:30%"></i></span></td>
+          <td class="muted">2026-09-14</td></tr>
+        <tr><td><a href="#">/Qw3rT7</a></td><td class="url-cell">https://example.com/pricing-update</td>
+          <td><span class="badge">311</span> <span class="spark"><i style="height:20%"></i><i style="height:45%"></i><i style="height:65%"></i><i style="height:55%"></i><i style="height:90%"></i><i style="height:75%"></i><i style="height:85%"></i></span></td>
+          <td class="muted">2026-09-16</td></tr>
+        <tr><td><a href="#">/zLm81v</a></td><td class="url-cell">https://example.com/docs/getting-started</td>
+          <td><span class="badge">127</span> <span class="spark"><i class="zero" style="height:8%"></i><i style="height:25%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:30%"></i><i style="height:60%"></i><i style="height:45%"></i></span></td>
+          <td class="muted">2026-09-19</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

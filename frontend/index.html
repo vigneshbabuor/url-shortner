@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinkPulse</title>
+<style>
+  :root{
+    --bg:#0d1117; --surface:#161b22; --border:#30363d; --text:#e6edf3;
+    --muted:#8b949e; --accent:#58a6ff; --accent-hover:#79b8ff;
+    --success:#3fb950; --danger:#f85149; --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px; line-height:1.5;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:40px 20px}
+  h1{font-size:24px; font-weight:700; margin:0 0 24px; letter-spacing:-.02em}
+  h1 .pulse{color:var(--accent)}
+  .card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:20px; margin-bottom:20px;
+  }
+  form{display:flex; gap:10px; flex-wrap:wrap}
+  input[type=url]{
+    flex:1 1 260px; min-width:0; padding:9px 12px;
+    background:var(--bg); color:var(--text);
+    border:1px solid var(--border); border-radius:var(--radius);
+    font:inherit; outline:none;
+  }
+  input[type=url]::placeholder{color:var(--muted)}
+  input[type=url]:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(88,166,255,.3)}
+  button{
+    padding:9px 18px; background:var(--accent); color:var(--bg);
+    border:1px solid transparent; border-radius:var(--radius);
+    font:inherit; font-weight:600; cursor:pointer;
+  }
+  button:hover{background:var(--accent-hover)}
+  button:disabled{opacity:.6; cursor:default}
+  .msg{margin:12px 0 0; font-size:13px; word-break:break-all; display:none}
+  .msg.show{display:block}
+  .msg.success{color:var(--success)}
+  .msg.error{color:var(--danger)}
+  .msg a{color:var(--accent); text-decoration:none}
+  .msg a:hover{text-decoration:underline}
+  table{width:100%; border-collapse:collapse}
+  th{
+    text-align:left; font-size:12px; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--muted); font-weight:600;
+    padding:0 12px 10px; border-bottom:1px solid var(--border);
+  }
+  th:last-child, td:last-child{text-align:right}
+  td{padding:12px; border-bottom:1px solid var(--border); vertical-align:middle}
+  tbody tr:hover{background:#1c2129}
+  tbody tr:last-child td{border-bottom:none}
+  td a{color:var(--accent); text-decoration:none; font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  td a:hover{color:var(--accent-hover); text-decoration:underline}
+  .dest{color:var(--text); max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pill{
+    display:inline-block; padding:2px 10px; font-size:12px; font-weight:600;
+    border:1px solid var(--border); border-radius:999px; color:var(--text);
+    background:var(--bg); white-space:nowrap;
+  }
+  .created{color:var(--muted); white-space:nowrap}
+  .empty{color:var(--muted); text-align:center; padding:24px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Link<span class="pulse">Pulse</span></h1>
+
+  <div class="card">
+    <form id="shorten-form">
+      <input id="url-input" type="url" placeholder="https://example.com/very/long/link" required>
+      <button id="submit-btn" type="submit">Shorten</button>
+    </form>
+    <p id="msg" class="msg"></p>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Short</th><th>Destination</th><th>Clicks</th><th>Created</th></tr>
+      </thead>
+      <tbody id="links-body"></tbody>
+    </table>
+    <p id="empty" class="empty" hidden>No links yet.</p>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('shorten-form');
+const input = document.getElementById('url-input');
+const btn = document.getElementById('submit-btn');
+const msg = document.getElementById('msg');
+const tbody = document.getElementById('links-body');
+const empty = document.getElementById('empty');
+
+function show(text, kind, href) {
+  msg.className = 'msg show ' + kind;
+  msg.textContent = '';
+  if (href) {
+    const a = document.createElement('a');
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = text;
+    msg.appendChild(a);
+  } else {
+    msg.textContent = text;
+  }
+}
+
+function row(link) {
+  const tr = document.createElement('tr');
+
+  const short = document.createElement('td');
+  const a = document.createElement('a');
+  a.href = '/r/' + link.code;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = '/' + link.code;
+  short.appendChild(a);
+
+  const dest = document.createElement('td');
+  dest.className = 'dest';
+  dest.title = link.url;
+  dest.textContent = link.url;
+
+  const clicks = document.createElement('td');
+  const pill = document.createElement('span');
+  pill.className = 'pill';
+  pill.textContent = link.clicks + (link.clicks === 1 ? ' click' : ' clicks');
+  clicks.appendChild(pill);
+
+  const created = document.createElement('td');
+  created.className = 'created';
+  const d = new Date(link.createdAt);
+  created.textContent = isNaN(d) ? link.createdAt : d.toLocaleString();
+
+  tr.append(short, dest, clicks, created);
+  return tr;
+}
+
+async function loadLinks() {
+  try {
+    const res = await fetch('/links');
+    const links = await res.json();
+    tbody.textContent = '';
+    links.forEach(l => tbody.appendChild(row(l)));
+    empty.hidden = links.length > 0;
+  } catch (e) {
+    empty.hidden = false;
+  }
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  btn.disabled = true;
+  try {
+    const res = await fetch('/shorten', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: input.value })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const short = data.shortUrl || ('/r/' + data.code);
+      show(short, 'success', short);
+      try { await navigator.clipboard.writeText(new URL(short, location.href).href); } catch (_) {}
+      input.value = '';
+      loadLinks();
+    } else {
+      show(data.error || 'Request failed', 'error');
+    }
+  } catch (err) {
+    show('Network error', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+loadLinks();
+</script>
+</body>
+</html>
