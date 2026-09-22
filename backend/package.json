@@ -4,8 +4,8 @@
   "private": true,
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "test": "jest --runInBand"
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "test": "node --env-file-if-exists=.env ./node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
     "express": "^4.22.3"

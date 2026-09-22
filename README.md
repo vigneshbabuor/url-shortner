@@ -25,10 +25,16 @@ Open http://localhost:3000 — shorten links and watch click counts in the dashb
 
 ## Configuration
 
-| Env var  | Default           | Purpose            |
-| -------- | ----------------- | ------------------ |
-| `PORT`   | `3000`            | HTTP port          |
-| `DB_FILE`| `backend/data.db` | SQLite database file |
+Copy `backend/.env.example` to `backend/.env` and adjust. `npm start` / `npm test` load it automatically (Node `--env-file-if-exists`); a missing `.env` is fine.
+
+| Env var  | Default            | Purpose |
+| -------- | ------------------ | ------- |
+| `PORT`   | `3000`             | HTTP port |
+| `DB_FILE`| `backend/data.db`  | SQLite database file |
+| `BASE_URL` | derived from request | Public base URL for short links (set behind a proxy / custom domain, e.g. `https://links.example.com`) |
+| `API_KEY` | _(unset)_          | If set, `POST /shorten` requires header `x-api-key: <API_KEY>` |
+
+`.env` is gitignored — never commit real credentials.
 
 ## API
 
@@ -38,6 +44,9 @@ curl -X POST http://localhost:3000/shorten \
   -H 'Content-Type: application/json' \
   -d '{"url":"https://example.com/some/long/url"}'
 # => 201 {"shortUrl":"http://localhost:3000/r/Ab3xK9","code":"Ab3xK9"}
+
+# With API_KEY set, add: -H "x-api-key: $API_KEY"
+```
 
 # Redirect (records a click)
 curl -i http://localhost:3000/r/Ab3xK9     # 301 -> destination

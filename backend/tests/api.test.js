@@ -13,7 +13,10 @@ const db = require('../src/db');
 
 afterAll(() => {
   db.close();
-  for (const f of [DB_FILE, `${DB_FILE}-wal`, `${DB_FILE}-shm`]) fs.rmSync(f, { force: true });
+  // ponytail: sandbox denies rmSync in some temp dirs; leftover tmp DBs are harmless
+  for (const f of [DB_FILE, `${DB_FILE}-wal`, `${DB_FILE}-shm`]) {
+    try { fs.rmSync(f, { force: true }); } catch { /* ignore */ }
+  }
 });
 
 const shorten = url => request(app).post('/shorten').send({ url });
@@ -45,6 +48,31 @@ describe('POST /shorten', () => {
 
   test('400 on javascript: scheme', async () => {
     expect((await shorten('javascript:alert(1)')).status).toBe(400);
+  });
+
+  test('BASE_URL overrides shortUrl host', async () => {
+    process.env.BASE_URL = 'https://links.example.com';
+    jest.resetModules();
+    const { app: fresh } = require('../src/app');
+    const res = await request(fresh).post('/shorten').send({ url: 'https://example.com/base' });
+    expect(res.body.shortUrl).toBe(`https://links.example.com/r/${res.body.code}`);
+    delete process.env.BASE_URL;
+  });
+
+  test('API_KEY guard: 401 without header, 201 with, open when unset', async () => {
+    jest.resetModules();
+    const { app: fresh } = require('../src/app');
+    // guard off by default in test env
+    expect((await request(fresh).post('/shorten').send({ url: 'https://example.com/k0' })).status).toBe(201);
+
+    process.env.API_KEY = 'secret-key';
+    jest.resetModules();
+    const { app: guarded } = require('../src/app');
+    expect((await request(guarded).post('/shorten').send({ url: 'https://example.com/k1' })).status).toBe(401);
+    expect((await request(guarded).post('/shorten').set('x-api-key', 'wrong')).status).toBe(401);
+    const ok = await request(guarded).post('/shorten').set('x-api-key', 'secret-key').send({ url: 'https://example.com/k2' });
+    expect(ok.status).toBe(201);
+    delete process.env.API_KEY;
   });
 });
 

@@ -8,6 +8,15 @@ const { genCode, isValidUrl } = require('./shortener');
 const app = express();
 app.use(express.json());
 
+// Optional API key guard: set API_KEY in .env to require `x-api-key` on /shorten.
+const API_KEY = process.env.API_KEY;
+app.post('/shorten', (req, res, next) => {
+  if (API_KEY && req.get('x-api-key') !== API_KEY) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  next();
+});
+
 // Serve the frontend (fixes CORS: page must load over http, not file://)
 app.use(express.static(path.join(__dirname, '..', '..', 'frontend')));
 
@@ -31,7 +40,8 @@ app.post('/shorten', (req, res) => {
   }
   if (!code) return res.status(500).json({ error: 'could not allocate code' });
 
-  res.status(201).json({ shortUrl: `${req.protocol}://${req.get('host')}/r/${code}`, code });
+  const base = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+  res.status(201).json({ shortUrl: `${base}/r/${code}`, code });
 });
 
 app.get('/r/:code', (req, res) => {
